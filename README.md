@@ -1,4 +1,6 @@
-# telegram_chat_bot_openai
+# Telegram BOT collection
+
+bot - chat bots
 
 Download bot.py
 
@@ -9,3 +11,5 @@ pip install aiohttp random python-telegram-bot requests openai
 Set 'TELEGRAM_TOKEN' and 'OPENAI_TOKEN'
 
 start bot
+
+virus.py - bot to analyze links and files for malware
