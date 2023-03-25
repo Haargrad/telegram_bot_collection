@@ -38,9 +38,9 @@ This Telegram bot sends random videos from the 2ch.hk/b board to users who have 
 
 Run the bot by executing the following command:
 
-\`\`\`
+```bash
 python3 2ch-random.py
-\`\`\`
+```
 
 ## Usage
 
