@@ -145,6 +145,56 @@ The interval should be specified as a string with a number followed by one of th
 - \`h\` for hours (e.g., \`2h\` means 2 hours)
 - \`d\` for days (e.g., \`1d\` means 1 day)
 
+# Telegram Bot: 4chan Media Scheduler
+
+This Telegram bot is designed to fetch random media from a specified 4chan board and send it to subscribed users at a specified interval.
+
+## Features
+
+- Fetch random media (images and videos) from a specified 4chan board
+- Convert .webm videos to .mp4 format
+- Subscribe users to receive media at specified intervals
+- Send media only during a specific time range
+
+## Dependencies
+
+- moviepy
+- requests
+- python-telegram-bot
+
+## Usage
+
+1. Install the required dependencies:
+
+```bash
+pip install moviepy requests python-telegram-bot
+```
+
+2. Replace TELEGRAM_TOKEN with your bot's API token.
+
+3. Run the script:
+
+```bash
+python3 4chan.py
+```
+
+4. Interact with the bot using the following commands:
+
+/start <interval> - Subscribe to the bot's media feed. The interval can be specified with "m" for minutes or "h" for hours (e.g., "5m" or "2h"). Default interval is 1 minute.
+
+The board can be changed by entering the desired value in the variable board = 'wsg'
+
+/random4chan - Send a random media from the specified board immediately.
+
+How it works
+The bot fetches the catalog of the specified board and chooses a random thread.
+It then selects a random post with media from the thread.
+If the media is a video in .webm format, it converts it to .mp4.
+The bot sends the media to the subscribed chat.
+The bot checks the specified interval and sends media only during the specified time range.
+Note
+The code has been provided in Russian. Make sure to translate the text to the desired language before using the bot.
+
 ## License
 
 This project is available under the MIT License.
