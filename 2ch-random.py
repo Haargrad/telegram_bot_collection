@@ -60,35 +60,48 @@ def get_random_2hk_video_url():
         response = requests.get(f'https://2ch.hk/b/res/{thread_id}.json')
         data = response.json()
 
-        video_posts = [p for p in data['threads'][0]['posts'] if 'files' in p and p['files']]
+        if 'posts' in data['threads'][0]:
+            allowed_extensions = ['.mp4', '.webm', '.jpg', '.jpeg', '.png', '.gif']
+            video_posts = [p for p in data['threads'][0]['posts'] if 'files' in p and p['files'] and any(p['files'][0]['path'].lower().endswith(ext) for ext in allowed_extensions)]
 
-        if video_posts:
-            random_video_post = random.choice(video_posts)
-            video_path = random_video_post['files'][0]['path'] if random_video_post['files'] else None
-            if video_path:
-                return f'https://2ch.hk{video_path}'
+            if video_posts:
+                random_video_post = random.choice(video_posts)
+                video_path = random_video_post['files'][0]['path'] if random_video_post['files'] else None
+                if video_path:
+                    return f'https://2ch.hk{video_path}'
+        else:
+            print(f"Key 'posts' not found in the thread {thread_id}")
 
     return None
 
 def send_video(chat_id, context: CallbackContext):
-    video_url = get_random_2hk_video_url()
-    if video_url:
-        ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'outtmpl': 'temp_video.%(ext)s',
-            'quiet': True
-        }
+    media_url = get_random_2hk_video_url()
+    if media_url:
+        file_extension = os.path.splitext(media_url)[-1].lower()
 
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            file_name = ydl.prepare_filename(info)
+        if file_extension in ['.jpg', '.jpeg', '.png', '.gif']:
+            context.bot.send_photo(chat_id=chat_id, photo=media_url)
+        else:
+            ydl_opts = {
+                'format': 'bestvideo+bestaudio/best',
+                'outtmpl': 'temp_video.%(ext)s',
+                'quiet': True
+            }
 
-        with open(file_name, 'rb') as video_file:
-            context.bot.send_video(chat_id=chat_id, video=video_file)
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                try:
+                    info = ydl.extract_info(media_url, download=True)
+                    file_name = ydl.prepare_filename(info)
+                except youtube_dl.DownloadError:
+                    context.bot.send_message(chat_id=chat_id, text='Не удалось загрузить видео. Попробуйте еще раз.')
+                    return
 
-        os.remove(file_name)
+            with open(file_name, 'rb') as video_file:
+                context.bot.send_video(chat_id=chat_id, video=video_file)
+
+            os.remove(file_name)
     else:
-        context.bot.send_message(chat_id=chat_id, text='Не удалось получить видео. Попробуйте еще раз.')
+        context.bot.send_message(chat_id=chat_id, text='Не удалось получить видео или изображение. Попробуйте еще раз.')
 
 def parse_interval(interval_str):
     if ':' in interval_str:
