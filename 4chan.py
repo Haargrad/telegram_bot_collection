@@ -3,6 +3,7 @@ import tempfile
 import random
 import datetime
 import requests
+import json
 from datetime import timedelta
 from moviepy.editor import VideoFileClip
 from telegram import Update
@@ -10,6 +11,17 @@ from telegram.ext import Updater, CommandHandler, CallbackContext
 
 TELEGRAM_TOKEN = ''
 board = 'wsg'
+
+def save_subscribers(subscribers):
+    with open("subscribers.json", "w") as file:
+        json.dump(subscribers, file)
+
+def load_subscribers():
+    try:
+        with open("subscribers.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
 
 def get_random_4chan_media(board):
     url = f"https://a.4cdn.org/{board}/catalog.json"
@@ -79,11 +91,23 @@ def schedule_random_media(context: CallbackContext):
 subscribed_chats = {}
 last_sent_times = {}
 
+subscribed_chats = load_subscribers()
+
 def start(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     interval = context.args[0] if context.args else "1m"  # Используйте аргументы или значение по умолчанию (1 минута)
     subscribed_chats[chat_id] = interval
+    save_subscribers(subscribed_chats)  # Сохраните подписчиков в файл
     update.message.reply_text(f'Вы подписались на рассылку видео с интервалом {interval}.')
+
+def stop(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    if chat_id in subscribed_chats:
+        del subscribed_chats[chat_id]
+        save_subscribers(subscribed_chats)
+        update.message.reply_text("Вы успешно отписались от рассылки.")
+    else:
+        update.message.reply_text("Вы не подписаны на рассылку.")
 
 def send_random_4chan_media_command(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
@@ -122,8 +146,8 @@ def main():
     job_queue = updater.job_queue
     interval = timedelta(minutes=1)
     job_queue.run_repeating(schedule_random_media, interval=interval)
+    dispatcher.add_handler(CommandHandler("stop", stop))
 
-    # Запустите бота
     updater.start_polling()
     updater.idle()
 
